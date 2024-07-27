@@ -5,7 +5,7 @@ import numpy as np
 import os
 import cv2
 
-from det_seg_track.utils import getPoints
+from det_seg_track.utils import getPoints, getEuclideanDistance, validatePoint
 
 class Segmentator:
     def __init__(self, segmentator_name):
@@ -20,7 +20,7 @@ class Segmentator:
             segmentator_path = os.path.join('./checkpoints', 'sam_b.pt')
             self.seg_model = SAM(segmentator_path)
         elif (segmentator_name == 'sam_l'):
-            segmentator_path = os.path.join('./checkpoints', 'sam_b.pt')
+            segmentator_path = os.path.join('./checkpoints', 'sam_l.pt')
             self.seg_model = SAM(segmentator_path)
         elif (segmentator_name == 'mobile_sam'):
             segmentator_path = os.path.join('./checkpoints', 'mobile_sam.pt')
@@ -46,13 +46,26 @@ class Segmentator:
 
         # if mask is less than 10% of image area, it's considered invalid
         if ((mask_area/image_area) > 0.1):
-            print('mask true')
             mask = np.float32(np.multiply(boolean_mask, 255))
 
+            # if eyes are visible, use them to create possible face area mask
+            # if not, use bbox
+            left_eye = person.getBodyPart('LeftEye')
+            right_eye = person.getBodyPart('RightEye')
+            nose = np.array(person.getBodyPart('Nose'))
+            if validatePoint(right_eye, frame.shape) and validatePoint(left_eye, frame.shape):
+                mask = checkIfFitsInFaceArea(mask, nose, 
+                                             right_eye=np.array(right_eye), 
+                                             left_eye=np.array(left_eye))
+            elif validatePoint(right_eye, frame.shape):
+                mask = checkIfFitsInFaceArea(mask, nose, right_eye=np.array(right_eye))
+            elif validatePoint(left_eye, frame.shape):
+                mask = checkIfFitsInFaceArea(mask, nose, left_eye=np.array(left_eye))
+            else:
+                mask = checkIfFitsInBBox(mask, person.bbox)
             # morphological filtration
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21,21)) 
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21,21))
             mask = morphologicalFiltration(mask, kernel)
-            mask = checkIfFitsInBBox(mask, person.bbox)
         else:
             mask = None
         return mask
@@ -70,15 +83,31 @@ def checkIfFitsInBBox(mask, bbox):
     """
     bbox = [ int(x) for x in bbox ]
     bbox_mask = np.zeros(mask.shape, np.float32)
-    print(bbox_mask.shape)
-    print('dim 1: ',bbox[1], bbox[3])
-    print('dim 2: ',bbox[0], bbox[2])
     bbox_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = 255
 
     mask_cropped_to_bbox = cv2.bitwise_and(mask, bbox_mask, mask = None)
 
     return mask_cropped_to_bbox
 
+def checkIfFitsInFaceArea(mask, nose, left_eye = None, right_eye = None):
+    """Check if mask fits in circle, which \n
+    center is nose \n
+    radius is doubled distance between eyes and nose
+    """
+    radius_list = []
+    if left_eye is not None:
+        radius_list.append(getEuclideanDistance(nose, left_eye))
+    if right_eye is not None:
+        radius_list.append(getEuclideanDistance(nose, right_eye))
+
+    radius_mean = int(np.mean(radius_list))
+    radius = radius_mean * 3
+
+    face_mask = np.zeros(mask.shape, np.float32)
+    face_mask = cv2.circle(face_mask, nose, radius, 255, -1)
+    mask_cropped_to_bbox = cv2.bitwise_and(mask, face_mask, mask = None)
+
+    return mask_cropped_to_bbox
 
 
 

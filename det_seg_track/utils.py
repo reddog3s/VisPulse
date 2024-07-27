@@ -6,6 +6,8 @@ BODY_PART_MAPPING = {
         "Nose" : 0,
         "RightShoulder" : 6,
         "LeftShoulder" : 5,
+        "LeftEye" : 1,
+        "RightEye" : 2
     }
 }
 
@@ -187,7 +189,6 @@ def getPoints(person, frame_shape, include_negative = True, reverse = False):
     labels = []
     negative_points = ['RightShoulder', 'LeftShoulder']
     points.append(person.getBodyPart('Nose', reverse = reverse))
-    print(points)
     labels.append(1)
 
     if include_negative:
@@ -199,3 +200,45 @@ def getPoints(person, frame_shape, include_negative = True, reverse = False):
 
     return points, labels
 
+def getEuclideanDistance(point1, point2):
+    return np.linalg.norm(point1-point2)
+
+def bbox_ious(boxes1, boxes2):
+    """
+    Compute intersection over union (iou) for predicted and gt bounding boxes
+    Arguments:
+    :param boxes1: N1 X 4, [xmin, ymin, xmax, ymax]
+    :param boxes2: N2 X 4, [xmin, ymin, xmax, ymax]
+
+    Return:
+    iou - list, N1 X N2
+    """
+    #if boxes1 is empty, return array of -1, length of boxes2
+    if len(boxes1) == 0:
+        return np.ones([len(boxes2), 1]) * (-1)
+
+    #if boxes2 is empty, return array of -1, length of boxes1
+    if len(boxes2) == 0:
+        return np.ones([len(boxes1), 1]) * (-1)
+    b1x1, b1y1 = np.split(boxes1[:, :2], 2, axis=1) #min x min y from bbox1
+    b1x2, b1y2 = np.split(boxes1[:, 2:4], 2, axis=1) #max x max y from bbox1
+    b2x1, b2y1 = np.split(boxes2[:, :2], 2, axis=1) #min x min y from bbox2
+    b2x2, b2y2 = np.split(boxes2[:, 2:4], 2, axis=1) #max x max y from bbox2
+
+    dx = np.maximum(np.minimum(b1x2, np.transpose(b2x2)) - np.maximum(b1x1, np.transpose(b2x1)), 0) #max (min from max(1,2) - max from min(1,2)) x
+    dy = np.maximum(np.minimum(b1y2, np.transpose(b2y2)) - np.maximum(b1y1, np.transpose(b2y1)), 0) #max (min from max(1,2) - max from min(1,2)) y
+    intersections = dx * dy # compute area of rectangle (intersections)
+
+    areas1 = (b1x2 - b1x1) * (b1y2 - b1y1) #max x1 - min x1 * max y1 - min y1, compute area of rectangle (bbox)
+    areas2 = (b2x2 - b2x1) * (b2y2 - b2y1)
+    unions = (areas1 + np.transpose(areas2)) - intersections #unions is equal to sum of areas minus intersection
+
+    return intersections / unions
+
+def mask_ious(mask1, mask2):
+    """Calculate iou between 2 binary masks
+    """
+    intersection = cv2.bitwise_and(mask1, mask2, mask = None)
+    union = cv2.bitwise_or(mask1, mask2, mask = None)
+
+    return np.sum(intersection) / np.sum(union)

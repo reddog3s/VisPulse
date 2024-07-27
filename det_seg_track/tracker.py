@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from ByteTrack.yolox.tracker.byte_tracker import STrack, BYTETracker
-from onemetric.cv.utils.iou import box_iou_batch
+from det_seg_track.utils import bbox_ious
 """
 BYTETracker does not assign tracker_id to existing bounding boxes but rather
 predicts the next bounding box position based on previous one. Therefore, we 
@@ -75,7 +75,7 @@ def match_detections_with_tracks(
 ) -> List:
     detection_boxes = detections2boxes(detections=detections, with_confidence=False)
     tracks_boxes = tracks2boxes(tracks=tracks)
-    iou = box_iou_batch(tracks_boxes, detection_boxes)
+    iou = bbox_ious(tracks_boxes, detection_boxes)
     track2detection = np.argmax(iou, axis=1)
     
     for tracker_index, detection_index in enumerate(track2detection):
