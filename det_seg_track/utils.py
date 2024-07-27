@@ -61,7 +61,11 @@ class Person:
         is_valid_person = False
         nose = self.getBodyPart('Nose')
 
-        # validation
+        # bbox dim validation
+        for i in range(4):
+            if self.bbox[i] < 0:
+                self.bbox[i] = 0
+
         bbox_area = (self.bbox[2] - self.bbox[0]) * (self.bbox[3] - self.bbox[1])
         image_area = (frame_shape[0] * frame_shape[1])
 

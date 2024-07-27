@@ -1,8 +1,8 @@
 
-from utils import ImageAnnotator
-from tracker import Tracker
-from segmentator import Segmentator
-from detector import Detector
+from det_seg_track.utils import ImageAnnotator
+from det_seg_track.tracker import Tracker
+from det_seg_track.segmentator import Segmentator
+from det_seg_track.detector import Detector
 
 class DetSegTrack:
     """
@@ -20,13 +20,13 @@ class DetSegTrack:
         image_combined: The combined image. np.ndarray
 
     """
-    def __init__(self, detector_name, tracker_name, segmentator_name):
+    def __init__(self, detector_name, tracker_name, segmentator_name, use_deployed_model = True):
         self.detector_name = detector_name
         self.tracker_name = tracker_name
         self.segmentator_name = segmentator_name
 
         # detector
-        self.detector_model = Detector(detector_name, use_deployed_model = True)
+        self.detector_model = Detector(detector_name, use_deployed_model = use_deployed_model)
 
         # tracker
         yolov_trackers = ['botsort', 'bytetrack']

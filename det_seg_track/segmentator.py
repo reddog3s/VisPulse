@@ -5,7 +5,7 @@ import numpy as np
 import os
 import cv2
 
-from utils import getPoints
+from det_seg_track.utils import getPoints
 
 class Segmentator:
     def __init__(self, segmentator_name):
@@ -70,6 +70,9 @@ def checkIfFitsInBBox(mask, bbox):
     """
     bbox = [ int(x) for x in bbox ]
     bbox_mask = np.zeros(mask.shape, np.float32)
+    print(bbox_mask.shape)
+    print('dim 1: ',bbox[1], bbox[3])
+    print('dim 2: ',bbox[0], bbox[2])
     bbox_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = 255
 
     mask_cropped_to_bbox = cv2.bitwise_and(mask, bbox_mask, mask = None)

@@ -5,7 +5,7 @@ from mmpose.apis import MMPoseInferencer
 from mmdeploy.apis.utils import build_task_processor
 from mmdeploy.utils import get_input_shape, load_config
 import torch
-from utils import Person
+from det_seg_track.utils import Person
 import cv2
 
 class Detector:
