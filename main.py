@@ -14,7 +14,7 @@ cap = cv2.VideoCapture(vid_path)
 vid_size = (1080,1920)
 out = cv2.VideoWriter(out_path_vid, cv2.VideoWriter_fourcc('M','J','P','G'), 10, vid_size)
 # yolov8s-pose
-det_seg_track_module = DetSegTrack('rtmo-l', 'bytetrack', 'sam_l', use_deployed_model = False)
+det_seg_track_module = DetSegTrack('rtmo-l', 'bytetrack', 'mobile_sam', use_deployed_model = False)
 hr_module = HeartRateEstimator()
 times = []
 # Loop through the video frames
@@ -29,7 +29,7 @@ try:
             print('Frame ', i, '\n')
             start = time.time()
             annotated_frame, person_list = det_seg_track_module.estimate(frame)
-            hr_results = hr_module.estimate(frame, person_list)
+            hr_results = hr_module.estimate(frame, i, person_list)
             end = time.time()
             print('Operation time: ', end - start)
             times.append(end - start)
