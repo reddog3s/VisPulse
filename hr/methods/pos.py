@@ -12,7 +12,8 @@ from hr.hr_utils import detrend, process_video
 
 def POS_WANG(frames, fs):
     WinSec = 1.6
-    RGB = process_video(frames)
+    RGB = frames
+    #RGB = process_video(frames, format = None)
     N = RGB.shape[0]
     H = np.zeros((1, N))
     l = math.ceil(WinSec * fs)

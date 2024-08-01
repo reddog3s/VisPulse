@@ -9,9 +9,10 @@ def get_heartrate_for_date(hr, start, end):
 workout_idx_from_end = 1
 
 # /mnt/d/studia/export/export.xml
-hr_data_path = os.path.join('/mnt','d','studia','export', 'HeartRate.csv')
-workout_data_path = os.path.join('/mnt','d','studia','export', 'Workout.csv')
-
+folder = 'export'
+hr_data_path = os.path.join('/mnt','d','test','iphone',folder, 'HeartRate.csv')
+workout_data_path = os.path.join('/mnt','d', 'test','iphone',folder, 'Workout.csv')
+save_path = os.path.join('/home','wojtek', 'magisterka', 'results','hr_results','gt','hr.csv')
 # 2020-01-01 00:22:47 +0300
 heartrate_data = pd.read_csv(hr_data_path, date_format='%Y-%m-%d %H:%M:%S %z',
                              parse_dates=['creationDate','startDate','endDate'],
@@ -60,4 +61,4 @@ heartrate_workout['value'] = heartrate_workout['value'].fillna(1.0)
 
 print(heartrate_workout.head())
 
-heartrate_workout.to_csv('./hr_results/gt/hr.csv', index=False)
+heartrate_workout.to_csv('./results/hr_results/gt/hr2.csv', index=False)

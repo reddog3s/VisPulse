@@ -57,6 +57,7 @@ def calculate_fft_hr(ppg_signal, fs=30, low_bpm=45, high_bpm=180):
     N = _next_power_of_2(ppg_signal.shape[1])
     print('N: ', N)
     f_ppg, pxx_ppg = periodogram(ppg_signal, fs=fs, nfft=N, detrend=False)
+    print(f_ppg)
 
     # filter results between lowest and highest possible bpm
     low_pass = low_bpm / 60

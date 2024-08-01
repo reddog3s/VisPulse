@@ -25,7 +25,7 @@ class Person:
         self.is_valid = False
         self.mask = None
     def __repr__(self):
-        return "Test()"
+        return "person " + str(self.tracker_id)
     def __str__(self):
         return "person " + str(self.tracker_id)
 
@@ -72,7 +72,8 @@ class Person:
         image_area = (frame_shape[0] * frame_shape[1])
 
         # if bbox is smaller than 20% of image, it's not valid
-        is_bbox_valid = (bbox_area/image_area) > 0.2 and self.bbox[4] > conf
+        # is_bbox_valid = (bbox_area/image_area) > 0.2 and self.bbox[4] > conf
+        is_bbox_valid = self.bbox[4] > conf
 
         # if keypoint conf is less than thresh, make it -1
         if keypoints_conf is not None:
@@ -86,6 +87,9 @@ class Person:
             self.keypoints = keypoints_filtered
 
         # if nose is not visible, it's not valid
+        # print('nose valid: ', validatePoint(nose, frame_shape))
+        # print('nose shape: ', nose)
+        # print('frame shape: ', frame_shape)
         if (validatePoint(nose, frame_shape) and is_bbox_valid):
             self.is_valid = True
             is_valid_person = True
@@ -169,7 +173,7 @@ def overlay(image, mask, color, alpha, resize=None):
 def validatePoint(point, frame_shape, keypoint_conf = None, conf_threshold = 0.1):
     is_valid = False
     is_valid_shape = False
-    if (point[0] <= frame_shape[0] and point[1] <= frame_shape[1]):
+    if (point[0] <= frame_shape[1] and point[1] <= frame_shape[0]):
         if (point[0] > 0 and point[1] > 0):
             is_valid_shape = True
     

@@ -41,33 +41,32 @@ class Segmentator:
             ann = self.seg_model(frame, points=points, labels=labels)
 
         boolean_mask = ann[0].masks.data.numpy()[0]
-        mask_area = boolean_mask.sum()
-        image_area = boolean_mask.shape[0] * boolean_mask.shape[1]
+        # mask_area = boolean_mask.sum()
+        # image_area = boolean_mask.shape[0] * boolean_mask.shape[1]
 
         # if mask is less than 10% of image area, it's considered invalid
-        if ((mask_area/image_area) > 0.1):
-            mask = np.float32(np.multiply(boolean_mask, 255))
+        
+        mask = np.float32(np.multiply(boolean_mask, 255))
 
-            # if eyes are visible, use them to create possible face area mask
-            # if not, use bbox
-            left_eye = person.getBodyPart('LeftEye')
-            right_eye = person.getBodyPart('RightEye')
-            nose = np.array(person.getBodyPart('Nose'))
-            if validatePoint(right_eye, frame.shape) and validatePoint(left_eye, frame.shape):
-                mask = checkIfFitsInFaceArea(mask, nose, 
+        # if eyes are visible, use them to create possible face area mask
+        # if not, use bbox
+        left_eye = person.getBodyPart('LeftEye')
+        right_eye = person.getBodyPart('RightEye')
+        nose = np.array(person.getBodyPart('Nose'))
+        if validatePoint(right_eye, frame.shape) and validatePoint(left_eye, frame.shape):
+            mask = checkIfFitsInFaceArea(mask, nose, 
                                              right_eye=np.array(right_eye), 
                                              left_eye=np.array(left_eye))
-            elif validatePoint(right_eye, frame.shape):
-                mask = checkIfFitsInFaceArea(mask, nose, right_eye=np.array(right_eye))
-            elif validatePoint(left_eye, frame.shape):
-                mask = checkIfFitsInFaceArea(mask, nose, left_eye=np.array(left_eye))
-            else:
-                mask = checkIfFitsInBBox(mask, person.bbox)
-            # morphological filtration
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21,21))
-            mask = morphologicalFiltration(mask, kernel)
+        elif validatePoint(right_eye, frame.shape):
+            mask = checkIfFitsInFaceArea(mask, nose, right_eye=np.array(right_eye))
+        elif validatePoint(left_eye, frame.shape):
+            mask = checkIfFitsInFaceArea(mask, nose, left_eye=np.array(left_eye))
         else:
-            mask = None
+            mask = checkIfFitsInBBox(mask, person.bbox)
+        # morphological filtration
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21,21))
+        mask = morphologicalFiltration(mask, kernel)
+
         return mask
 
 def morphologicalFiltration(mask, kernel):

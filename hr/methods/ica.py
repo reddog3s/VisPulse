@@ -15,7 +15,8 @@ def ICA_POH(frames, FS):
     # Cut off frequency.
     LPF = 0.7
     HPF = 2.5
-    RGB = process_video(frames)
+    #RGB = process_video(frames)
+    RGB = frames
 
     NyquistF = 1 / 2 * FS
     BGRNorm = np.zeros(RGB.shape)

@@ -47,7 +47,7 @@ class DetSegTrack:
             person_results = self.tracker.useTracker(person_results, frame)        
 
         annotator = ImageAnnotator(frame, annotated_frame, convertRGBToBGR = params['convertRGBToBGR'])
-        
+
         if ('FastSAM' in self.segmentator_name):
             self.seg_model.initFastSAM(frame)
         for person in person_results:

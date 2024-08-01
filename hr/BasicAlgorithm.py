@@ -5,6 +5,7 @@ from scipy.signal import butter, filtfilt
 from hr.methods.green import green
 from hr.methods.pos import POS_WANG
 from hr.methods.exg import ExG
+from hr.methods.ica import ICA_POH
 from hr.hr_utils import calculate_fft_hr, calculate_peak_hr
 
 def BasicAlgorithm(face, method = 'green', fs = 30, hr_estimation = 'fft'):
@@ -13,7 +14,9 @@ def BasicAlgorithm(face, method = 'green', fs = 30, hr_estimation = 'fft'):
     elif method == 'ExG':
         signal = ExG(face)
     elif method == 'POS':
-        signal = POS_WANG(face)
+        signal = POS_WANG(face, fs = fs)
+    elif method == 'ICA':
+        signal = ICA_POH(face, FS = fs)
 
     [b, a] = butter(1, [0.75 / fs * 2, 2.5 / fs * 2], btype='bandpass')
     signal_filtered = filtfilt(b, a, np.double(signal))
