@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from skimage.measure import label, regionprops, find_contours
 
 BODY_PART_MAPPING = {
     "COCO" : {
@@ -48,7 +49,7 @@ class Person:
         bbox_conf = np.append(bbox, bbox_conf)
         self.bbox = bbox_conf
         self.tracker_id = int(tracker)
-    
+        
     def getBodyPart(self, body_part_name, reverse=False):
         body_part = None
         body_part_idx = BODY_PART_MAPPING[self.keypoint_format][body_part_name]
@@ -246,3 +247,69 @@ def mask_ious(mask1, mask2):
     union = cv2.bitwise_or(mask1, mask2, mask = None)
 
     return np.sum(intersection) / np.sum(union)
+
+def bbox_to_xywh(bbox):
+    """From xyxy to xywh
+    """
+    bbox_xywh = []
+    bbox_xywh.append(bbox[0])
+    bbox_xywh.append(bbox[1])
+    bbox_xywh.append(abs(bbox[0] - bbox[2]))
+    bbox_xywh.append(abs(bbox[1] - bbox[3]))
+    return bbox_xywh
+
+def bbox_to_xyxy(bbox):
+    """From xywh to xyxy
+    """
+    bbox_xyxy = []
+    bbox_xyxy.append(bbox[0])
+    bbox_xyxy.append(bbox[1])
+    bbox_xyxy.append(bbox[0] + bbox[2])
+    bbox_xyxy.append(bbox[1] + bbox[3])
+    return bbox_xyxy
+
+""" Convert a mask to border image """
+def mask_to_border(mask):
+    h, w = mask.shape
+    border = np.zeros((h, w))
+
+    contours = find_contours(mask, 128)
+    for contour in contours:
+        for c in contour:
+            x = int(c[0])
+            y = int(c[1])
+            border[x][y] = 255
+
+    return border
+
+""" Mask to bounding boxes """
+def mask_to_bbox(mask):
+    bboxes = []
+
+    mask = mask_to_border(mask)
+    lbl = label(mask)
+    props = regionprops(lbl)
+    for prop in props:
+        x1 = prop.bbox[1]
+        y1 = prop.bbox[0]
+
+        x2 = prop.bbox[3]
+        y2 = prop.bbox[2]
+
+        bboxes=[x1, y1, x2, y2]
+        bboxes = bbox_to_xywh(bboxes)
+    return bboxes
+
+def getKeypointsVis(keypoints, frame_shape):
+    """get keypoints for posetrack21
+    """
+    keypoints_vis = []
+    for keypoint in keypoints:
+        keypoints_vis.append(keypoint[0])
+        keypoints_vis.append(keypoint[1])
+
+        if validatePoint(keypoint, frame_shape):
+            keypoints_vis.append(1)
+        else:
+            keypoints_vis.append(0)
+    return keypoints_vis
