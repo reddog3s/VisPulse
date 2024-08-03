@@ -7,7 +7,7 @@ import pandas as pd
 import argparse
 import re
 import json
-from det_seg_track.utils import bbox_to_xywh, mask_to_bbox, getKeypointsVis
+from det_seg_track.utils import bbox_to_xywh, mask_to_bbox, getKeypointsVis, getPossibleFaceArea
 
 #extract int numbers from string
 def num_sort(test_string):
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     detector = args.detector
     tracker = args.tracker
-    segmenetator = args.segmentator
+    segmentator = args.segmentator
     use_deployed_model = args.use_deployed_model
     save_json = args.save_json
     save_vis = args.save_vis
@@ -43,7 +43,7 @@ else:
     vid_path = os.path.join('/mnt','d', 'test','iphone','video' , vid_name + '.mp4')
     detector = 'rtmo-l'
     tracker = 'bytetrack'
-    segmenetator = 'mobile_sam'
+    segmentator = 'mobile_sam'
     use_deployed_model = False
     save_mode = 'vid'
     hr_estimation_method = None
@@ -57,7 +57,7 @@ img_dirs = os.listdir(gt_base_path)
 
 try:
     for dir_name in img_dirs:
-        det_seg_track_module = DetSegTrack(detector, tracker, segmenetator, use_deployed_model = use_deployed_model)
+        det_seg_track_module = DetSegTrack(detector, tracker, segmentator, use_deployed_model = use_deployed_model, validate_person= False)
         # read gt data and init results
         gt_path = os.path.join(gt_base_path, dir_name)
         with open(gt_path, 'r') as f:
@@ -78,23 +78,32 @@ try:
                 print('Frame: ', img_name, '\n')
 
                 img_id = img_data['image_id']
-                img_gt_df = annotations_gt[annotations_gt['image_id'] == img_id]
+                # img_gt_df = annotations_gt[annotations_gt['image_id'] == img_id]
 
                 image_path = os.path.join(input_path, img_name)
                 frame = cv2.imread(image_path)
                 annotated_frame, person_list = det_seg_track_module.estimate(frame)
 
                 for person in person_list:
-                    gt_person_df = img_gt_df[img_gt_df['track_id'] == person.tracker_id]
+                    # gt_person_df = img_gt_df[img_gt_df['track_id'] == person.tracker_id]
+                    if person.tracker_id is None:
+                        person.tracker_id = 0
+
+                    possible_face_mask = getPossibleFaceArea(person, frame.shape)
+                    if possible_face_mask is not None:
+                        mask_bbox = mask_to_bbox(possible_face_mask)
+                    else:
+                        mask_bbox = [0,0,0,0]
+
 
                     person_dict = {
                         'bbox': bbox_to_xywh(person.bbox),
-                        'bbox_head': mask_to_bbox(person.mask),
-                        'category_id': int(gt_person_df['category_id'].iloc[0]),
+                        'bbox_head': mask_bbox,
+                        'category_id': 1,
                         'id': int(str(img_id) + '0' + str(person.tracker_id)),
                         'image_id': int(img_id),
                         'keypoints': getKeypointsVis(person.keypoints, frame.shape),
-                        'person_id': int(gt_person_df['person_id'].iloc[0]),
+                        'person_id': int(person.tracker_id),
                         'track_id': int(person.tracker_id)
                         }
                     results['annotations'].append(person_dict)

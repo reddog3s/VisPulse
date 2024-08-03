@@ -8,7 +8,9 @@ BODY_PART_MAPPING = {
         "RightShoulder" : 6,
         "LeftShoulder" : 5,
         "LeftEye" : 1,
-        "RightEye" : 2
+        "RightEye" : 2,
+        "RightEar": 4,
+        "LeftEar": 3
     }
 }
 
@@ -313,3 +315,61 @@ def getKeypointsVis(keypoints, frame_shape):
         else:
             keypoints_vis.append(0)
     return keypoints_vis
+
+def getCenterPoint(point1, point2):
+    center = []
+    center.append(point1[0] + point2[0] / 2)
+    center.append(point1[1] + point2[1] / 2)
+    return center
+
+def getPossibleFaceArea(person, frame_shape):
+    face_mask = None
+
+    nose = person.getBodyPart('Nose')
+    left_eye = person.getBodyPart('LeftEye')
+    left_ear = person.getBodyPart('LeftEar')
+    right_eye = person.getBodyPart('RightEye')
+    right_ear = person.getBodyPart('RightEar')
+
+    points_list = [nose, left_ear, left_eye, right_ear, right_eye]
+    for i, point in enumerate(points_list):
+        if validatePoint(point, frame_shape):
+            points_list[i] = None
+        else:
+            points_list[i] = np.array(point)
+
+
+    nose = points_list[0]
+    left_eye = points_list[2]
+    left_ear = points_list[1]
+    right_eye = points_list[4]
+    right_ear = points_list[3]
+    radius_list = []
+    radius = None
+    if nose is not None:
+        if right_ear is not None or left_ear is not None:
+            if left_ear is not None:
+                radius_list.append(getEuclideanDistance(nose, left_ear))
+            if right_ear is not None:
+                radius_list.append(getEuclideanDistance(nose, right_ear))
+            radius = int(np.mean(radius_list))
+        else:
+            if left_eye is not None:
+                radius_list.append(getEuclideanDistance(nose, left_eye))
+            if right_eye is not None:
+                radius_list.append(getEuclideanDistance(nose, right_eye))
+                radius_mean = int(np.mean(radius_list))
+                radius = radius_mean * 3
+    elif right_ear is not None and left_ear is not None:
+        radius = getEuclideanDistance(getCenterPoint(left_ear, right_ear), right_ear)
+    elif right_eye is not None and left_eye is not None:
+        radius = getEuclideanDistance(getCenterPoint(left_eye, right_eye), right_eye)
+    elif right_eye is not None and right_ear is not None:
+        radius = getEuclideanDistance(right_eye, right_ear)
+    elif left_eye is not None and left_ear is not None:
+        radius = getEuclideanDistance(right_eye, right_ear)
+        
+    if radius is not None:
+        face_mask = np.zeros(frame_shape, np.float32)
+        face_mask = cv2.circle(face_mask, nose, radius, 255, -1)
+    return face_mask

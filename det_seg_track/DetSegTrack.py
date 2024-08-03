@@ -20,10 +20,11 @@ class DetSegTrack:
         image_combined: The combined image. np.ndarray
 
     """
-    def __init__(self, detector_name, tracker_name, segmentator_name = None, use_deployed_model = True):
+    def __init__(self, detector_name, tracker_name, segmentator_name = None, use_deployed_model = True, validate_person = True):
         self.detector_name = detector_name
         self.tracker_name = tracker_name
         self.segmentator_name = segmentator_name
+        self.validate_person = validate_person
 
         # detector
         self.detector_model = Detector(detector_name, use_deployed_model = use_deployed_model)
@@ -44,7 +45,7 @@ class DetSegTrack:
 
     def estimate(self, frame, visualize = True):
         annotated_frame, person_results, params = self.detector_model.useDetector(frame, self.detect_and_track, 
-                                                                                  self.tracker_name)
+                                                                                  self.tracker_name, validatePerson = self.validate_person)
         if (not self.detect_and_track):
             person_results = self.tracker.useTracker(person_results, frame)        
 

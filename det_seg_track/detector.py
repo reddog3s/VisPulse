@@ -73,7 +73,7 @@ class Detector:
                     device=device
                 )
 
-    def useDetector(self, frame, detect_and_track = False, tracker_name = None):
+    def useDetector(self, frame, detect_and_track = False, tracker_name = None, validatePerson = True):
         if ('yolo' in self.detector_name):
             if (detect_and_track):
                 results = self.detector_model.track(frame, persist=True, tracker=tracker_name)
@@ -92,8 +92,10 @@ class Detector:
                                                 box.tolist(),
                                                 results[0].boxes.conf.tolist()[i],
                                                 results[0].boxes.id.tolist()[i])
-                if (person.validatePerson(frame.shape)):
-                    person_results.append(person)
+                if validatePerson:
+                    if (person.validatePerson(frame.shape)):
+                        continue
+                person_results.append(person)
         else:
             if self.use_deployed_model:
                 # process input image
@@ -114,10 +116,12 @@ class Detector:
                     person.fromMMDeployResult(keypoints, 
                                               results[0].pred_instances.bboxes[i], 
                                               bbox_scores[i])
-                    if (person.validatePerson(annotated_frame.shape, keypoints_conf = keypoints_scores[i])):
-                        person_results.append(person)
-                        for [x, y] in person.keypoints.astype(int):
-                            annotated_frame = cv2.circle(annotated_frame, (x, y), 20, (0, 255, 0), -1)
+                    if validatePerson:
+                        if (not person.validatePerson(annotated_frame.shape, keypoints_conf = keypoints_scores[i])):
+                            continue
+                    person_results.append(person)
+                    for [x, y] in person.keypoints.astype(int):
+                        annotated_frame = cv2.circle(annotated_frame, (x, y), 20, (0, 255, 0), -1)
 
                 show_tracker = True
                 convertRGBToBGR = False
@@ -130,8 +134,10 @@ class Detector:
                 for instance in results['predictions'][0]:
                     person = Person()
                     person.fromMMPoseResult(instance)
-                    if (person.validatePerson(annotated_frame.shape)):
-                        person_results.append(person)
+                    if validatePerson:
+                        if (person.validatePerson(annotated_frame.shape)):
+                            continue
+                    person_results.append(person)
             
                 show_tracker = True
                 convertRGBToBGR = True
