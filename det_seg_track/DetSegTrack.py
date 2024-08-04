@@ -31,6 +31,7 @@ class DetSegTrack:
 
         # tracker
         self.detect_and_track = False
+        self.tracker = None
         yolov_trackers = ['botsort', 'bytetrack']
         if ('yolov' in detector_name and tracker_name in yolov_trackers):
             self.tracker_name = tracker_name + '.yaml'
@@ -42,6 +43,8 @@ class DetSegTrack:
         # segmentation
         if self.segmentator_name is not None:
             self.seg_model = Segmentator(segmentator_name)
+        else:
+            self.seg_model = segmentator_name
 
     def estimate(self, frame, visualize = True):
         annotated_frame, person_results, params = self.detector_model.useDetector(frame, self.detect_and_track, 
@@ -59,5 +62,16 @@ class DetSegTrack:
                 person.mask = self.seg_model.getFaceMask(frame, person)
                 if visualize:
                     annotator.annotateImage(person, showTracker = params['show_tracker'])
+        result_frame = None
+        if visualize:
+            result_frame = annotator.annotated_frame
+            del annotator
         
-        return annotator.annotated_frame, person_results
+        return result_frame, person_results
+    
+    def __del__(self):
+        del self.detector_model
+        if self.tracker is not None:
+            del self.tracker
+        if self.seg_model is not None:
+            del self.seg_model

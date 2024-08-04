@@ -93,7 +93,7 @@ class Detector:
                                                 results[0].boxes.conf.tolist()[i],
                                                 results[0].boxes.id.tolist()[i])
                 if validatePerson:
-                    if (person.validatePerson(frame.shape)):
+                    if (not person.validatePerson(frame.shape)):
                         continue
                 person_results.append(person)
         else:
@@ -135,7 +135,7 @@ class Detector:
                     person = Person()
                     person.fromMMPoseResult(instance)
                     if validatePerson:
-                        if (person.validatePerson(annotated_frame.shape)):
+                        if (not person.validatePerson(annotated_frame.shape)):
                             continue
                     person_results.append(person)
             

@@ -27,10 +27,7 @@ class HeartRateEstimator:
                     # extract colored face from mask
                     face = frame * colored_mask
                     # append tracker_id and rgb_data to buffer
-                    if self.method == 'POS' or self.method == 'ICA':
-                        rgb_data_person_list.append((person.tracker_id, process_video([face], format = '3d')))
-                    else:
-                        rgb_data_person_list.append((person.tracker_id, process_video([face])))
+                    rgb_data_person_list.append((person.tracker_id, process_video([face])))
                 else:
                     rgb_data_person_list.append((person.tracker_id, np.array([0, 0, 0], ndmin=2)))
 

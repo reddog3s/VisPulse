@@ -5,7 +5,7 @@ import numpy as np
 import os
 import cv2
 
-from det_seg_track.utils import getPoints, getEuclideanDistance, validatePoint, getPossibleFaceArea
+from det_seg_track.utils import getPoints, getPossibleFaceArea
 
 class Segmentator:
     def __init__(self, segmentator_name):
@@ -26,6 +26,15 @@ class Segmentator:
             segmentator_path = os.path.join('./checkpoints', 'mobile_sam.pt')
             self.seg_model = SAM(segmentator_path)
     
+    def extractSkinByHSV(self, frame):
+        img_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # low_thresh = (0, 15, 0)
+        # high_thresh = (17,170,255)
+        low_thresh = (0, 20, 70)
+        high_thresh = (20,255,255)
+        HSV_mask = cv2.inRange(img_HSV, low_thresh, high_thresh) 
+        return HSV_mask
+
     def initFastSAM(self, frame):
         if ('FastSAM' in self.segmentator_name):
             segmentation_results = self.seg_model(frame, device="cpu", retina_masks=True, imgsz=1024,
@@ -36,11 +45,13 @@ class Segmentator:
         if ('FastSAM' in self.segmentator_name):
             points, labels = getPoints(person, frame.shape)
             ann = self.prompt_process.point_prompt(points=points, pointlabel=labels)
+            boolean_mask = ann[0].masks.data.numpy()[0]
+        elif ('hsv' == self.segmentator_name):
+            boolean_mask = self.extractSkinByHSV(frame)
         else:
             points, labels = getPoints(person, frame.shape)
             ann = self.seg_model(frame, points=points, labels=labels)
-
-        boolean_mask = ann[0].masks.data.numpy()[0]
+            boolean_mask = ann[0].masks.data.numpy()[0]
         # mask_area = boolean_mask.sum()
         # image_area = boolean_mask.shape[0] * boolean_mask.shape[1]
 
@@ -50,11 +61,11 @@ class Segmentator:
 
         # if eyes or ears are visible, use them to create possible face area mask
         # if not, use bbox
-        possible_face_mask = getPossibleFaceArea(person, frame.shape)
+        possible_face_mask = getPossibleFaceArea(person, mask.shape)
         if possible_face_mask is not None:
             mask = cropMask(mask, possible_face_mask)
         else:
-            mask = cropMask(mask, getBBoxMask(person.bbox, frame.shape))
+            mask = cropMask(mask, getBBoxMask(person.bbox, mask.shape))
     
         # morphological filtration
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21,21))

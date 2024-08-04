@@ -71,7 +71,7 @@ try:
 
         # gt annotations to df
         annotations_gt = pd.DataFrame.from_dict(gt_data['annotations'])
-
+        ids = []
         for img_data in gt_data['images']:
             if img_data['is_labeled']:
                 img_name = img_data['file_name']
@@ -82,14 +82,15 @@ try:
 
                 image_path = os.path.join(input_path, img_name)
                 frame = cv2.imread(image_path)
-                annotated_frame, person_list = det_seg_track_module.estimate(frame)
+                annotated_frame, person_list = det_seg_track_module.estimate(frame, visualize=save_vis)
 
                 for person in person_list:
                     # gt_person_df = img_gt_df[img_gt_df['track_id'] == person.tracker_id]
-                    if person.tracker_id is None:
-                        person.tracker_id = 0
+                    #if person.tracker_id is None:
+                    #    person.tracker_id = max(ids) + 100
+                    #ids.append(person.tracker_id)
 
-                    possible_face_mask = getPossibleFaceArea(person, frame.shape)
+                    possible_face_mask = getPossibleFaceArea(person, frame.shape[:2])
                     if possible_face_mask is not None:
                         mask_bbox = mask_to_bbox(possible_face_mask)
                     else:
@@ -123,6 +124,8 @@ try:
             out_dir_path = os.path.join(out_dir, dir_name)
             with open(out_dir_path , 'w', encoding='utf-8') as f:
                 json.dump(results, f, ensure_ascii=False, indent=4)
+        
+        del det_seg_track_module
 except KeyboardInterrupt:
     print('\nKeyboard interrupt \n')
     if save_json:
