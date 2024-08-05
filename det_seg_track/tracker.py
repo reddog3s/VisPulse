@@ -93,12 +93,13 @@ def match_detections_with_tracks(
     tracks_boxes = tracks2boxes(tracks=tracks)
     iou = bbox_ious(tracks_boxes, detection_boxes)
     track2detection = np.argmax(iou, axis=1)
-    # print('detections ', detection_boxes.shape)
-    # print('tracks ', tracks_boxes.shape)
-    # print('tracks raw ', len(tracks))
-    # print('track2detection ', track2detection.shape)
-    # print('mapping ', tracks_mapping)
-    # print('det ', detections)
+    print('detections ', detection_boxes.shape)
+    print('tracks ', tracks_boxes.shape)
+    print('tracks raw ', tracks)
+    print('track2detection shape ', track2detection.shape)
+    print('track2detection ', track2detection)
+    print('mapping ', tracks_mapping)
+    print('det ', detections)
 
     # assure that tracker and detection can be selected
     if track2detection.shape[0] <= len(tracks) and track2detection.shape[0] <= len(detections):
@@ -112,9 +113,12 @@ def match_detections_with_tracks(
 
                 # if track id is new, map it to matched person id
                 # person id can come from previous frame and doesnt have to be identical to track id
-                if track_id not in tracks_mapping['track_id']:
+                if track_id not in tracks_mapping['track_id'] and det_id not in tracks_mapping['person_id']:
                     tracks_mapping['track_id'].append(track_id)
                     tracks_mapping['person_id'].append(det_id)
+                elif track_id not in tracks_mapping['track_id'] and track_id not in tracks_mapping['person_id']:
+                    tracks_mapping['track_id'].append(track_id)
+                    tracks_mapping['person_id'].append(track_id)     
                 
                 # assign correct person id mapped to current track id
                 track_idx = tracks_mapping['track_id'].index(track_id)
@@ -132,8 +136,9 @@ def match_detections_with_tracks(
         max_id = max(tracks_mapping['person_id'])
         for detection in detections:
             if detection.tracker_id is None:
-                max_id += 1
+                max_id += 100
                 detection.tracker_id = max_id
                 
+    print('det after track', detections)
             
     return detections, tracks_mapping
