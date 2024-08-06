@@ -115,7 +115,8 @@ try:
                     #                                  (0, 255, 255), 5)
 
                     file_name = img_name.split("/")[-1]
-                    out_path_img = os.path.join(out_img_dir, file_name)
+                    folder = img_name.split("/")[-2]
+                    out_path_img = os.path.join(out_img_dir, folder + '_' + file_name)
                     cv2.imwrite(out_path_img, annotated_frame)
             else:
                 continue

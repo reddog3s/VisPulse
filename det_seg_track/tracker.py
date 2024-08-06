@@ -93,13 +93,13 @@ def match_detections_with_tracks(
     tracks_boxes = tracks2boxes(tracks=tracks)
     iou = bbox_ious(tracks_boxes, detection_boxes)
     track2detection = np.argmax(iou, axis=1)
-    print('detections ', detection_boxes.shape)
-    print('tracks ', tracks_boxes.shape)
-    print('tracks raw ', tracks)
-    print('track2detection shape ', track2detection.shape)
-    print('track2detection ', track2detection)
-    print('mapping ', tracks_mapping)
-    print('det ', detections)
+    # print('detections ', detection_boxes.shape)
+    # print('tracks ', tracks_boxes.shape)
+    # print('tracks raw ', tracks)
+    # print('track2detection shape ', track2detection.shape)
+    # print('track2detection ', track2detection)
+    # print('mapping ', tracks_mapping)
+    # print('det ', detections)
 
     # assure that tracker and detection can be selected
     if track2detection.shape[0] <= len(tracks) and track2detection.shape[0] <= len(detections):
@@ -139,6 +139,6 @@ def match_detections_with_tracks(
                 max_id += 100
                 detection.tracker_id = max_id
                 
-    print('det after track', detections)
+    # print('det after track', detections)
             
     return detections, tracks_mapping

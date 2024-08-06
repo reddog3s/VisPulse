@@ -65,7 +65,7 @@ class Detector:
                 #    model_path=detector_path, device_name=device, device_id=0)
             else:
                 detector_path = os.path.join('./checkpoints', 
-                                            'rtmo-l_16xb16-700e_body7-crowdpose-640x640-5bafdc11_20231219.pt')
+                                            'rtmo-l_16xb16-700e_body7-crowdpose-640x640-5bafdc11_20231219.pth')
                 detector_config = './mmpose/configs/body_2d_keypoint/rtmo/crowdpose/rtmo-l_16xb16-700e_body7-crowdpose-640x640.py'
                 self.detector_model = MMPoseInferencer(
                     pose2d=detector_config,
@@ -85,13 +85,16 @@ class Detector:
             convertRGBToBGR = False
 
             person_results = []
+            ids = results[0].boxes.id
+            if ids is None:
+                ids = [id for id in range(len(results[0].boxes.xyxy))]
+
             for i, box in enumerate(results[0].boxes.xyxy):
                 person = Person()
-                
                 person.fromUltralyticsResult(results[0].keypoints.xy[i].tolist(),
                                                 box.tolist(),
                                                 results[0].boxes.conf.tolist()[i],
-                                                results[0].boxes.id.tolist()[i])
+                                                ids[i])
                 if validatePerson:
                     if (not person.validatePerson(frame.shape)):
                         continue
