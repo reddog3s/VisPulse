@@ -5,7 +5,7 @@ import pandas as pd
 import collections
 
 class HeartRateEstimator:
-    def __init__(self, method = 'POS', max_buffer_len = 512, fps = 30):
+    def __init__(self, method = 'POS', max_buffer_len = 10, fps = 30):
         self.max_buffer_len = max_buffer_len
         self.circular_buffer = collections.deque(maxlen=self.max_buffer_len)
         self.method = method
@@ -58,12 +58,12 @@ class HeartRateEstimator:
                     if person_df.shape[0] >= self.max_buffer_len:
                         rgb_data = person_df['rgb_data'].to_list()
                         rgb_data = np.vstack(tuple(rgb_data))
-                        print('rgb shape ', rgb_data.shape)
+                        #print('rgb shape ', rgb_data.shape)
                         hr = BasicAlgorithm(rgb_data, method = self.method, fs = self.fps)
                     else:
                         hr = 0
-                    print('person id ', id)
-                    print('hr ', hr)
+                    #print('person id ', id)
+                    #print('hr ', hr)
                     hr_data.append({
                         'person_id': id,
                         'hr': hr

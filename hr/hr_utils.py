@@ -55,9 +55,9 @@ def calculate_fft_hr(ppg_signal, fs=30, low_bpm=45, high_bpm=180):
     # calculate fft
     ppg_signal = np.expand_dims(ppg_signal, 0)
     N = _next_power_of_2(ppg_signal.shape[1])
-    print('N: ', N)
+    #print('N: ', N)
     f_ppg, pxx_ppg = periodogram(ppg_signal, fs=fs, nfft=N, detrend=False)
-    print(f_ppg)
+    #print(f_ppg)
 
     # filter results between lowest and highest possible bpm
     low_pass = low_bpm / 60
@@ -68,3 +68,13 @@ def calculate_fft_hr(ppg_signal, fs=30, low_bpm=45, high_bpm=180):
     fft_hr = np.take(mask_ppg, np.argmax(mask_pxx, 0))[0] * 60
 
     return fft_hr
+
+def pad_dict_list(dict_list, padel):
+    lmax = 0
+    for lname in dict_list.keys():
+        lmax = max(lmax, len(dict_list[lname]))
+    for lname in dict_list.keys():
+        ll = len(dict_list[lname])
+        if  ll < lmax:
+            dict_list[lname] += [padel] * (lmax - ll)
+    return dict_list

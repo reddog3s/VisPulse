@@ -52,22 +52,13 @@ class DetSegTrack:
         if (not self.detect_and_track):
             person_results = self.tracker.useTracker(person_results, frame)        
 
-        if visualize:
-            annotator = ImageAnnotator(frame, annotated_frame, convertRGBToBGR = params['convertRGBToBGR'])
-
         if self.segmentator_name is not None:
             if ('FastSAM' in self.segmentator_name):
                 self.seg_model.initFastSAM(frame)
             for person in person_results:
                 person.mask = self.seg_model.getFaceMask(frame, person)
-                if visualize:
-                    annotator.annotateImage(person, showTracker = params['show_tracker'])
-        result_frame = None
-        if visualize:
-            result_frame = annotator.annotated_frame
-            del annotator
         
-        return result_frame, person_results
+        return annotated_frame, person_results, params
     
     def __del__(self):
         del self.detector_model

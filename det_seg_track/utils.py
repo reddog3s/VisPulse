@@ -12,7 +12,7 @@ BODY_PART_MAPPING = {
         "RightEar": 4,
         "LeftEar": 3
     }
-}
+} 
 
 class Person:
     """Person with properties:
@@ -27,6 +27,8 @@ class Person:
         self.keypoint_format = keypoint_format
         self.is_valid = False
         self.mask = None
+        self.hr = None
+        self.image_id = None
     def __repr__(self):
         return "person " + str(self.tracker_id)
     def __str__(self):
@@ -100,7 +102,7 @@ class Person:
         return is_valid_person
 
 class ImageAnnotator:
-    def __init__(self, frame, annotated_frame = None, convertRGBToBGR = False):
+    def initAnnotator(self, frame, annotated_frame = None, convertRGBToBGR = False):
         self.colors = [(0,255,0),
                        (0,0,255),
                        (255,0,0),
@@ -114,7 +116,7 @@ class ImageAnnotator:
                 annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
             self.annotated_frame = annotated_frame
     
-    def annotateImage(self, person, showTracker = True, showNose = True, showBBox = True, showMask = True, showShoulders = True):
+    def annotateImage(self, person, showTracker = True, showHR = True, showNose = True, showBBox = True, showMask = True, showShoulders = True):
         if showBBox:
             bbox = [ int(x) for x in person.bbox ]
             self.annotated_frame = cv2.circle(self.annotated_frame, (bbox[0], bbox[1]), 
@@ -135,6 +137,11 @@ class ImageAnnotator:
             self.annotated_frame = cv2.putText(self.annotated_frame, str(person.tracker_id),
                                                 tuple(person.getBodyPart('Nose')), thickness=5, color=(0, 0, 0), 
                                                 fontScale=5.0, fontFace=cv2.FONT_HERSHEY_SIMPLEX)
+        if showHR:
+            bbox = [ int(x) for x in person.bbox ]
+            self.annotated_frame = cv2.putText(self.annotated_frame, 'hr: ' + str(person.hr),
+                                                (bbox[0], bbox[3]), thickness=5, color=(119, 247, 0), 
+                                                fontScale=2.0, fontFace=cv2.FONT_HERSHEY_SIMPLEX)   
         if showMask and person.mask is not None:
             color = (0,0,255)
             if (person.tracker_id is not None):
