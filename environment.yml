@@ -1,4 +1,4 @@
-name: mmdeploy
+name: vispulse
 channels:
   - pytorch
   - defaults
@@ -274,4 +274,4 @@ dependencies:
       - xtcocotools==1.14.3
       - yapf==0.40.2
       - zipp==3.19.2
-prefix: /home/wojtek/miniconda3/envs/mmdeploy
+prefix: /home/wojtek/miniconda3/envs/vispulse

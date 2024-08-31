@@ -29,7 +29,10 @@ Different combinations of pose detectors and trackers were evaluated on [PoseTra
 | YOLOv8m-pose + BoT-SORT  | 46.2 | 35.2 |
 | YOLOv8s-pose + ByteTrack   | 46.2 | 31.7 |
 
-Based on evaluation results for PoseTrack21, combination of **RTMPose-m + ByteTrack** was selected. HR estimation was evaluated using these algorithms with different BVP (blood volume pulse) signal extraction methods. The most simple method based on analysis of green channel turned out to be most accurate.
+Based on evaluation results for PoseTrack21, combination of **RTMPose-m + ByteTrack** was selected. HR estimation was evaluated on video sequences recorded for this project. On videos, one or two people are engaged in physical activities, standing 2m from camera. Apple Watch was used to gather ground truth HR data.
+
+Three different BVP (blood volume pulse) signal extraction methods were tested. The most simple method based on analysis of green channel turned out to be most accurate. 
+
 | BVP singal extraction method | RMSE [bpm] | Pearson correlation |
 | -------------------- | --- | ---- |
 | Green channel   | 17.266 | 0.867 |
