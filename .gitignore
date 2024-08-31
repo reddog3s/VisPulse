@@ -36,7 +36,9 @@ onnxruntime-linux-x64-1.8.1/
 runs/
 deployed_models/
 checkpoints/
-results/
+results/images/
+results/keypoints/
+results/hr_results/predicted/
 test.py
 
 # PyInstaller

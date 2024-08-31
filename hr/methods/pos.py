@@ -3,7 +3,7 @@ Wang, W., den Brinker, A. C., Stuijk, S., & de Haan, G. (2017).
 Algorithmic principles of remote PPG. 
 IEEE Transactions on Biomedical Engineering, 64(7), 1479-1491. 
 """
-
+# based on https://github.com/ubicomplab/rPPG-Toolbox
 import math
 
 import numpy as np

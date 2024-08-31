@@ -82,7 +82,7 @@ try:
 
                 image_path = os.path.join(input_path, img_name)
                 frame = cv2.imread(image_path)
-                annotated_frame, person_list = det_seg_track_module.estimate(frame, visualize=save_vis)
+                annotated_frame, person_list, params = det_seg_track_module.estimate(frame, visualize=save_vis)
 
                 for person in person_list:
                     # gt_person_df = img_gt_df[img_gt_df['track_id'] == person.tracker_id]
@@ -92,7 +92,7 @@ try:
 
                     possible_face_mask = getPossibleFaceArea(person, frame.shape[:2])
                     if possible_face_mask is not None:
-                        mask_bbox = mask_to_bbox(possible_face_mask)
+                        mask_bbox = bbox_to_xywh(mask_to_bbox(possible_face_mask))
                     else:
                         mask_bbox = [0,0,0,0]
 

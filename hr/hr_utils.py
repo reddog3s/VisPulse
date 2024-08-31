@@ -17,10 +17,19 @@ def detrend(input_signal, lambda_value):
         (H - np.linalg.inv(H + (lambda_value ** 2) * np.dot(D.T, D))), input_signal)
     return detrended_signal
 
-def detrend_MCWS(input_signal, window = 1, fps = 30):
+def detrend_MCWS(input_signal, window = 0.4, fps = 30):
     """Input signal has shape [n, 3]
+
+    detrendingP     = 1;    % wielkość okna analizy dla algorytmu usuwania trendu [s]
+
+    % - usunięcie trendu z sygnału, metoda MCwS (Mean-Centering-And-Scaling [1])
+    w               = round(detrendingP * FPS);    
+    n               = conv2(ones(3, size(vpg,1)), ones(1, w), 'same');
+    meanIntensity   = conv2(vpg', ones(1, w), 'same')./n;
+    sig1            = (vpg' - meanIntensity)./meanIntensity;
+    vpg2            = sig1';
     """
-    print(input_signal.shape)
+
     w = round(window * fps);    
     n = convolve2d(np.ones((input_signal.shape[1], input_signal.shape[0])), np.ones((1, w)), 'same')
     meanIntensity = convolve2d(np.transpose(input_signal), np.ones((1, w)), 'same') / n
@@ -67,7 +76,7 @@ def calculate_fft_hr(ppg_signal, fs=30, low_bpm=45, high_bpm=180):
     mask_pxx = np.take(pxx_ppg, fmask_ppg)
     fft_hr = np.take(mask_ppg, np.argmax(mask_pxx, 0))[0] * 60
 
-    return fft_hr
+    return fft_hr, mask_ppg, mask_pxx 
 
 def pad_dict_list(dict_list, padel):
     lmax = 0

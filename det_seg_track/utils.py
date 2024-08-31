@@ -64,7 +64,7 @@ class Person:
             body_part.reverse()
         return body_part
 
-    def validatePerson(self, frame_shape, keypoints_conf = None, conf = 0.8):
+    def validatePerson(self, frame_shape, keypoints_conf = None, conf = 0.2):
         is_valid_person = False
         nose = self.getBodyPart('Nose')
 
@@ -115,8 +115,19 @@ class ImageAnnotator:
             if convertRGBToBGR:
                 annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
             self.annotated_frame = annotated_frame
+        else:
+            self.annotated_frame = frame
     
-    def annotateImage(self, person, showTracker = True, showHR = True, showNose = True, showBBox = True, showMask = True, showShoulders = True):
+    def annotateImage(self, person, showTracker = True, showHR = True, showNose = True, showPossibleFace = True, showBBox = True, showMask = True, showShoulders = True):
+        if showPossibleFace:
+            possible = getPossibleFaceArea(person, person.mask.shape)
+            self.annotated_frame = overlay(self.annotated_frame, possible, color=(127, 0, 255), alpha=0.3)
+        if showMask and person.mask is not None:
+            color = (0,0,255)
+            if (person.tracker_id is not None):
+                if (person.tracker_id < len(self.colors)):
+                    color = self.colors[person.tracker_id]
+            self.annotated_frame = overlay(self.annotated_frame, person.mask, color=(0,255,0), alpha=1)
         if showBBox:
             bbox = [ int(x) for x in person.bbox ]
             self.annotated_frame = cv2.circle(self.annotated_frame, (bbox[0], bbox[1]), 
@@ -134,20 +145,15 @@ class ImageAnnotator:
             self.annotated_frame = cv2.circle(self.annotated_frame, tuple(person.getBodyPart('RightShoulder')), 
                                                 10, (0, 255, 255), -1)
         if showTracker:
+            bbox = [ int(x) for x in person.bbox ]
             self.annotated_frame = cv2.putText(self.annotated_frame, str(person.tracker_id),
-                                                tuple(person.getBodyPart('Nose')), thickness=5, color=(0, 0, 0), 
+                                                (bbox[0], bbox[1]), thickness=5, color=(0, 0, 0), 
                                                 fontScale=5.0, fontFace=cv2.FONT_HERSHEY_SIMPLEX)
         if showHR:
             bbox = [ int(x) for x in person.bbox ]
             self.annotated_frame = cv2.putText(self.annotated_frame, 'hr: ' + str(person.hr),
                                                 (bbox[0], bbox[3]), thickness=5, color=(119, 247, 0), 
                                                 fontScale=2.0, fontFace=cv2.FONT_HERSHEY_SIMPLEX)   
-        if showMask and person.mask is not None:
-            color = (0,0,255)
-            if (person.tracker_id is not None):
-                if (person.tracker_id < len(self.colors)):
-                    color = self.colors[person.tracker_id]
-            self.annotated_frame = overlay(self.annotated_frame, person.mask, color=color, alpha=0.3)
         return self.annotated_frame
 
 def overlay(image, mask, color, alpha, resize=None):
@@ -306,7 +312,7 @@ def mask_to_bbox(mask):
         y2 = prop.bbox[2]
 
         bboxes=[x1, y1, x2, y2]
-        bboxes = bbox_to_xywh(bboxes)
+        # bboxes = bbox_to_xywh(bboxes)
     return bboxes
 
 def getKeypointsVis(keypoints, frame_shape):

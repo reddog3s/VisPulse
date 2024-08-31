@@ -1,24 +1,22 @@
 import os
 import cv2
-from det_seg_track.DetSegTrack import DetSegTrack
-from det_seg_track.utils import ImageAnnotator
+from det_seg_track.utils import ImageAnnotator, Person, mask_to_bbox
 from hr.HeartRateEstimator import HeartRateEstimator
 from hr.hr_utils import pad_dict_list
-import time
 import numpy as np
 import pandas as pd
 import argparse
 
-vid_csv_path = os.path.join('/mnt','d', 'test', 'iphone','vid_data_temp.csv')
+vid_csv_path = os.path.join('/mnt','d', 'test', 'iphone','vid_data.csv')
 vid_data = pd.read_csv(vid_csv_path, date_format='%Y-%m-%d %H:%M:%S%z',
                              parse_dates=['vid_start','vid_end'],
                              dtype={
                                 'vid_id': 'int',
                                 'vid_start': 'string',
                                 'vid_end': 'string',
-                                'person_left': 'string',
+                                'person_left': 'int',
                                 'watch_left': 'int',
-                                'person_right': 'string',
+                                'person_right': 'int',
                                 'watch_right': 'int',
                                 'exercise': 'string',
                                 'file_path': 'string'
@@ -27,13 +25,7 @@ vid_data = pd.read_csv(vid_csv_path, date_format='%Y-%m-%d %H:%M:%S%z',
 parser = argparse.ArgumentParser(description='Project')
 parser.add_argument('--filepath', required=True,
                     help='path to videos')
-parser.add_argument('--detector', required=True,
-                    help='detector')
-parser.add_argument('--tracker', required=True,
-                    help='tracker')
-parser.add_argument('--segmentator', required=True,
-                    help='segmentator')
-parser.add_argument('--hr_method', required=False, default=None, 
+parser.add_argument('--hr_method', required=True, 
                     help='hr estimation method')
 parser.add_argument('--use_deployed_model',type=bool, required=False, default=False,
                     help='use_deployed_model')
@@ -43,38 +35,30 @@ parser.add_argument('--save_mode', required=False, default=None,
 if __name__ == "__main__":
     args = parser.parse_args()
     vid_path = args.filepath
-    detector = args.detector
-    tracker = args.tracker
-    segmenetator = args.segmentator
-    use_deployed_model = args.use_deployed_model
     save_mode = args.save_mode
     hr_estimation_method = args.hr_method
-else:
-    vid_name = 'IMG_9297'
-    #vid_path = os.path.join('/mnt','c','Users','Dell','studia-pliki-robocze','magisterka','src', vid_name + '.mov')
-    # python main.py --filepath /mnt/c/Users/Dell/studia-pliki-robocze/magisterka/src/IMG_4827.mp4 --detector rtmo-l --tracker bytetrack --segmentator mobile_sam
-    # python main.py --filepath /mnt/d/test/iphone/video/IMG_9297.mp4 --detector rtmo-l --tracker bytetrack --segmentator mobile_sam
-    vid_path = os.path.join('/mnt','d', 'test','iphone','video' , vid_name + '.mp4')
-    detector = 'rtmo-l'
-    tracker = 'bytetrack'
-    segmenetator = 'mobile_sam'
-    use_deployed_model = False
-    save_mode = 'vid'
-    hr_estimation_method = 'POS'
 
 out_path = os.path.join('./results')
 out_path_hr = os.path.join(out_path, 'hr_results', 'predicted')
 annotator = ImageAnnotator()
-save_mask = True
+
 if save_mode is not None:
     save_vis = True
 else:
     save_vis = False
 
 for vid_id in vid_data['vid_id']:
+    person_ids = []
     curr_vid_data = vid_data[vid_data['vid_id'] == vid_id]
+    num_person = 0
+    if curr_vid_data['watch_right'].iloc[0] != -1:
+        num_person += 1
+        person_ids.append(curr_vid_data['person_right'].iloc[0])
+    if curr_vid_data['watch_left'].iloc[0] != -1:
+        num_person += 1
+        person_ids.append(curr_vid_data['person_left'].iloc[0])
     vid_filename = curr_vid_data['file_path'].iloc[0]
-    curr_vid_path = os.path.join(vid_path, vid_filename)
+    curr_vid_path = os.path.join(vid_path, vid_filename) 
     #print(curr_vid_path)
 
     cap = cv2.VideoCapture(curr_vid_path)
@@ -85,7 +69,6 @@ for vid_id in vid_data['vid_id']:
     vid_name = vid_filename.split('.')[0]
     out_path_vid  = os.path.join('/mnt','d','test','iphone', 'videos', vid_name + '_out.avi')
     out = cv2.VideoWriter(out_path_vid, cv2.VideoWriter_fourcc('M','J','P','G'), fps, vid_size)
-    det_seg_track_module = DetSegTrack(detector, tracker, segmenetator, use_deployed_model = use_deployed_model)
     hr_module = HeartRateEstimator(hr_estimation_method, fps = fps)
     times = []
     hr = []
@@ -105,15 +88,21 @@ for vid_id in vid_data['vid_id']:
             success, frame = cap.read()
 
             if success:
-                # Run YOLOv8 tracking on the frame, persisting tracks between frames
                 print('Frame ', i, '\n')
-                start = time.time()
-                annotated_frame, person_list, params = det_seg_track_module.estimate(frame, visualize=save_vis)
-                if save_mask:
-                    for person_id, person in enumerate(person_list):
-                        out_path_mask = os.path.join(out_path, 'images',vid_name, "img_" + str(i) + "_" + str(person_id) + ".jpg")
-                        cv2.imwrite(out_path_mask, person.mask)
+                person_list = []
+                for person_id in person_ids:
+                    person = Person()
+                    path_mask = os.path.join(out_path, 'images',vid_name, "img_" + str(i) + "_" + str(person_id) + ".jpg")
+                    person.mask = cv2.imread(path_mask, cv2.IMREAD_GRAYSCALE)
+                    person.bbox = mask_to_bbox(person.mask)
+                    if len(person.bbox) == 0:
+                        person.bbox = [0, 0, 0, 0]
+                    person.tracker_id = person_id
+                    person_list.append(person)
+                
+
                 hr_results = hr_module.estimate(frame, i, person_list)
+
                 for person_hr in hr_results:
                     hr_data['frame_id'].append(i)
                     hr_data['time'].append(i/fps)
@@ -123,22 +112,17 @@ for vid_id in vid_data['vid_id']:
                         if person.tracker_id == person_hr['person_id']:
                             person.hr = person_hr['hr']
                             person.image_id = i
-                            hr_data['person_bbox'].append(person.bbox)
+                            if len(person.bbox) > 0:
+                                bbox_str = str(person.bbox[0]) + ' ' + str(person.bbox[1]) + ' ' + str(person.bbox[2]) + ' ' + str(person.bbox[3])
+                            else:
+                                bbox_str = '0 0 0 0'
+                            hr_data['person_bbox'].append(bbox_str)
                     
-                end = time.time()
-                print('Operation time: ', end - start)
-                times.append(end - start)
-                #for person in person_list:
-                #    print(vars(person))
                 if save_vis:
-                    annotator.initAnnotator(frame, annotated_frame, convertRGBToBGR = params['convertRGBToBGR'])
+                    annotator.initAnnotator(frame, convertRGBToBGR = False)
                     for person in person_list:
-                        annotator.annotateImage(person, showTracker = params['show_tracker'])
-                    if save_mode == 'img':
-                        out_path_img = os.path.join(out_path, 'images', "img_" + str(i) + ".jpg")
-                        cv2.imwrite(out_path_img, annotator.annotated_frame)
-                    elif save_mode == 'vid':
-                        out.write(annotator.annotated_frame)
+                        annotator.annotateImage(person, showTracker = True, showNose = False, showBBox = True, showMask = True, showShoulders = False)
+                    out.write(annotator.annotated_frame)
                 i+=1
                 # Break the loop if 'q' is pressed
                 if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -154,11 +138,10 @@ for vid_id in vid_data['vid_id']:
     df = pd.DataFrame.from_dict(hr_data)
     person = df[df['person_id'] == 1]
     print('Mean hr for person 1: ', np.mean(person['hr']))
-    out_path_file = os.path.join(out_path_hr, 'hr_' + str(vid_id) + '_'+ hr_estimation_method +  '_pred.csv')
+    out_path_file = os.path.join(out_path_hr, 'hr_' + str(vid_id) + '_'+ hr_estimation_method + '_pred.csv')
     df.to_csv(out_path_file,index = False)
     # Release the video capture object and close the display window
     cap.release()
     out.release()
-    del det_seg_track_module
     del hr_module
 del annotator

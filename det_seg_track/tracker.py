@@ -24,12 +24,12 @@ for frame in frames:
     detections = match_detections_with_tracks(detections=detections, tracks=tracks)
 """
 class BYTETrackerArgs:
-    track_thresh: float = 0.25
-    track_buffer: int = 30
-    match_thresh: float = 0.8
-    aspect_ratio_thresh: float = 3.0
-    min_box_area: float = 1.0
-    mot20: bool = False
+    track_thresh = 0.25 # High_threshold
+    track_buffer = 30 # Number of frame lost tracklets are kept
+    match_thresh = 0.8 # Matching threshold for first stage linear assignment
+    aspect_ratio_thresh = 3.0 # Minimum bounding box aspect ratio
+    min_box_area = 1.0 # Minimum bounding box area
+    mot20 = False # If used, bounding boxes are not clipped.
 
 class Tracker:
     def __init__(self, tracker_name):

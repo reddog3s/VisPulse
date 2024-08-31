@@ -27,13 +27,23 @@ class Segmentator:
             self.seg_model = SAM(segmentator_path)
     
     def extractSkinByHSV(self, frame):
+        img_BGRA = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
+        B = img_BGRA[:,:,0]
+        G = img_BGRA[:,:,1]
+        R = img_BGRA[:,:,2]
+        mask1 = (R > G) * (R > B) * (np.abs(R - G) > 15)
+        mask1 = np.float32(np.multiply(mask1, 255))
+        low_thresh = (20, 40, 95, 15)
+        high_thresh = (255,255,255, 255)
+        BGRA_mask = cv2.inRange(img_BGRA, low_thresh, high_thresh) 
+        mask_after_BGRA = cv2.bitwise_and(BGRA_mask, mask1, mask = None)
+
         img_HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # low_thresh = (0, 15, 0)
-        # high_thresh = (17,170,255)
         low_thresh = (0, 20, 70)
         high_thresh = (20,255,255)
-        HSV_mask = cv2.inRange(img_HSV, low_thresh, high_thresh) 
-        return HSV_mask
+        HSV_mask = cv2.inRange(img_HSV, low_thresh, high_thresh)
+        mask_end = cv2.bitwise_and(mask_after_BGRA, HSV_mask, mask = None)
+        return mask_end
 
     def initFastSAM(self, frame):
         if ('FastSAM' in self.segmentator_name):
@@ -70,6 +80,11 @@ class Segmentator:
         # morphological filtration
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21,21))
         mask = morphologicalFiltration(mask, kernel)
+
+        if np.sum(mask) <= 0:
+            if possible_face_mask != None and np.sum(possible_face_mask) > 0:
+                mask = possible_face_mask
+
 
         return mask
 

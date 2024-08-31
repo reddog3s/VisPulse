@@ -1,0 +1,5 @@
+sourceName,sourceVersion,device,type,unit,creationDate,startDate,endDate,value,videoTime
+Apple Watch — Наталья,10.6,"<<HKDevice: 0x300f03f70>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,15, software:10.6>",HeartRate,count/min,2024-08-02 12:28:17+03:00,2024-08-02 12:28:16+03:00,2024-08-02 12:28:16+03:00,93.0,2.0
+Apple Watch — Наталья,10.6,"<<HKDevice: 0x300f03f70>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,15, software:10.6>",HeartRate,count/min,2024-08-02 12:28:22+03:00,2024-08-02 12:28:18+03:00,2024-08-02 12:28:18+03:00,93.0,4.0
+Apple Watch — Наталья,10.6,"<<HKDevice: 0x300f03f70>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,15, software:10.6>",HeartRate,count/min,2024-08-02 12:28:27+03:00,2024-08-02 12:28:22+03:00,2024-08-02 12:28:22+03:00,98.0,8.0
+Apple Watch — Наталья,10.6,"<<HKDevice: 0x300f03f70>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,15, software:10.6>",HeartRate,count/min,2024-08-02 12:28:32+03:00,2024-08-02 12:28:27+03:00,2024-08-02 12:28:27+03:00,103.0,13.0

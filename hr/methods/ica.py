@@ -3,6 +3,7 @@ Non-contact, automated cardiac pulse measurements using video imaging and blind 
 Poh, M. Z., McDuff, D. J., & Picard, R. W. (2010).
 Optics express, 18(10), 10762-10774. DOI: 10.1364/OE.18.010762
 """
+# based on https://github.com/ubicomplab/rPPG-Toolbox
 import math
 
 import numpy as np
@@ -11,14 +12,14 @@ from scipy import signal
 from hr.hr_utils import detrend, process_video
 
 
-def ICA_POH(frames, FS):
+def ICA_POH(frames, fs):
     # Cut off frequency.
     LPF = 0.7
     HPF = 2.5
     #RGB = process_video(frames)
     RGB = frames
 
-    NyquistF = 1 / 2 * FS
+    NyquistF = 1 / 2 * fs
     BGRNorm = np.zeros(RGB.shape)
     Lambda = 100
     for c in range(3):
@@ -30,7 +31,7 @@ def ICA_POH(frames, FS):
     MaxPx = np.zeros((1, 3))
     for c in range(3):
         FF = np.fft.fft(S[c, :])
-        F = np.arange(0, FF.shape[1]) / FF.shape[1] * FS * 60
+        F = np.arange(0, FF.shape[1]) / FF.shape[1] * fs * 60
         FF = FF[:, 1:]
         FF = FF[0]
         N = FF.shape[0]

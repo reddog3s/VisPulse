@@ -5,8 +5,9 @@ from mmpose.apis import MMPoseInferencer
 from mmdeploy.apis.utils import build_task_processor
 from mmdeploy.utils import get_input_shape, load_config
 import torch
-from det_seg_track.utils import Person
+from det_seg_track.utils import Person, bbox_to_xywh
 import cv2
+import mmdeploy_runtime
 
 class Detector:
     def __init__(self, detector_name, device = 'cpu', use_deployed_model = True):
@@ -24,7 +25,7 @@ class Detector:
         elif (detector_name == 'yolov8s-pose'):
             detector_path = os.path.join('./checkpoints', detector_name + '.pt')
             self.detector_model = YOLO(detector_path)
-        if (detector_name == 'rtmo-l'):
+        elif (detector_name == 'rtmo-l'):
             if use_deployed_model:
                 deploy_cfg = './mmdeploy/configs/mmpose/pose-detection_rtmo_onnxruntime_dynamic.py'
                 model_cfg = './mmpose/configs/body_2d_keypoint/rtmo/body7/rtmo-l_16xb16-600e_body7-640x640.py'
@@ -48,7 +49,7 @@ class Detector:
                     pose2d_weights=detector_path,
                     device=device
                 )
-        if (detector_name == 'rtmo-l-crowdpose'):
+        elif (detector_name == 'rtmo-l-crowdpose'):
             if use_deployed_model:
                 deploy_cfg = './mmdeploy/configs/mmpose/pose-detection_rtmo_onnxruntime_dynamic.py'
                 model_cfg = 'rtmo-l_16xb16-700e_body7-crowdpose-640x640.py'
@@ -72,6 +73,49 @@ class Detector:
                     pose2d_weights=detector_path,
                     device=device
                 )
+        elif (detector_name == 'rtmo-m'):
+            detector_path = os.path.join('./checkpoints', 
+                                            'rtmo-m_16xb16-600e_body7-640x640-39e78cc4_20231211.pth')
+            detector_config = './mmpose/configs/body_2d_keypoint/rtmo/body7/rtmo-m_16xb16-600e_body7-640x640.py'
+            self.detector_model = MMPoseInferencer(
+                pose2d=detector_config,
+                pose2d_weights=detector_path,
+                device=device
+            )
+        elif (detector_name == 'rtmpose-l'):
+            detector_path = os.path.join('./checkpoints', 
+                                            'rtmpose-l_simcc-body7_pt-body7_420e-256x192-4dba18fc_20230504.pth')
+            detector_config = './mmpose/projects/rtmpose/rtmpose/body_2d_keypoint/rtmpose-l_8xb256-420e_coco-256x192.py'
+            self.detector_model = MMPoseInferencer(
+                pose2d=detector_config,
+                pose2d_weights=detector_path,
+                device=device
+            )
+        elif (detector_name == 'rtmpose-m'):
+            if use_deployed_model:
+                self.bbox_detector = mmdeploy_runtime.Detector(model_path='./results/rtmpose-det-dep',
+                    device_name='cpu', device_id=0)
+                self.detector_model = mmdeploy_runtime.PoseDetector(
+                    model_path='./results/rtmpose-m-dep', device_name='cpu', device_id=0)
+            else:
+                detector_path = os.path.join('./checkpoints', 
+                                                'rtmpose-m_simcc-body7_pt-body7_420e-256x192-e48f03d0_20230504.pth')
+                detector_config = './mmpose/projects/rtmpose/rtmpose/body_2d_keypoint/rtmpose-m_8xb256-420e_coco-256x192.py'
+                self.detector_model = MMPoseInferencer(
+                    pose2d=detector_config,
+                    pose2d_weights=detector_path,
+                    device=device
+                )
+        elif (detector_name == 'rtmpose-s'):
+            detector_path = os.path.join('./checkpoints', 
+                                            'rtmpose-s_simcc-body7_pt-body7_420e-256x192-acd4a1ef_20230504.pth')
+            detector_config = './mmpose/projects/rtmpose/rtmpose/body_2d_keypoint/rtmpose-s_8xb256-420e_coco-256x192.py'
+            self.detector_model = MMPoseInferencer(
+                pose2d=detector_config,
+                pose2d_weights=detector_path,
+                device=device
+            )
+
 
     def useDetector(self, frame, detect_and_track = False, tracker_name = None, validatePerson = True):
         if ('yolo' in self.detector_name):
@@ -100,7 +144,7 @@ class Detector:
                         continue
                 person_results.append(person)
         else:
-            if self.use_deployed_model:
+            if self.use_deployed_model and 'rtmo' in self.detector_name:
                 # process input image
                 input_shape = get_input_shape(self.deploy_cfg)
                 model_inputs, _ = self.task_processor.create_input(frame, input_shape)
@@ -126,6 +170,21 @@ class Detector:
                     for [x, y] in person.keypoints.astype(int):
                         annotated_frame = cv2.circle(annotated_frame, (x, y), 20, (0, 255, 0), -1)
 
+                show_tracker = True
+                convertRGBToBGR = False
+            elif self.use_deployed_model and 'rtmpose' in self.detector_name:
+                annotated_frame = frame
+                bboxes, labels, masks = self.bbox_detector(frame)
+                for bbox in bboxes:
+                    results = self.detector_model(frame, bbox_to_xywh(bbox))
+                    #print(results)
+                    _, point_num, _ = results.shape
+                    points = results[:, :, :2].reshape(point_num, 2)
+                    #for [x, y] in points.astype(int):
+                        #print((x, y))
+                        #cv2.circle(annotated_frame, (x, y), 1, (0, 255, 0), 2)
+                person_results = []
+                #cv2.imwrite('1.jpg', annotated_frame)
                 show_tracker = True
                 convertRGBToBGR = False
             else:
