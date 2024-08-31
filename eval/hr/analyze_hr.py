@@ -29,10 +29,10 @@ hr_real_std= []
 ids_real = []
 vid_ids_real = []
 
-vid_csv_path = os.path.join('/mnt','d', 'test', 'iphone','vid_data.csv')
-base_path_pred = os.path.join('./results','hr_results','predicted',method)
-base_path_gt = os.path.join('./results','hr_results','gt')
-vid_data = pd.read_csv(vid_csv_path, date_format='%Y-%m-%d %H:%M:%S%z',
+vid_csv_path = os.path.join('d:', 'test', 'iphone','vid_data.csv')
+base_path_pred = os.path.join('C://','Users','Dell','studia-pliki-robocze','magisterka','rezultaty','predicted',method)
+base_path_gt = os.path.join('C://','Users','Dell','studia-pliki-robocze','magisterka','rezultaty','gt')
+vid_data = pd.read_csv(vid_csv_path, 
                              parse_dates=['vid_start','vid_end'],
                              dtype={
                                 'vid_id': 'int',
@@ -45,7 +45,7 @@ vid_data = pd.read_csv(vid_csv_path, date_format='%Y-%m-%d %H:%M:%S%z',
                                 'exercise': 'string',
                                 'file_path': 'string'
                             })
-
+print(vid_data['vid_start'])
 for vid_id in vid_data['vid_id']:
     curr_vid_data = vid_data[vid_data['vid_id'] == vid_id]
     vid_id = curr_vid_data['vid_id'].iloc[0]
@@ -90,6 +90,7 @@ results_gt = pd.DataFrame({
     "hr_std_gt": hr_real_std
 })
 results_gt = results_gt.sort_values(by=['vid_id_gt', 'person_id_gt'])
+
 results = pd.DataFrame({
     "vid_id": vid_ids,
     "person_id": ids,
@@ -99,6 +100,7 @@ results = pd.DataFrame({
 results = results.sort_values(by=['vid_id', 'person_id'])
 results_all = results.join(results_gt)
 print(results_all)
+results_all.to_csv('results_' + method +'.csv',index=False)
 
 aprox = results_all['hr_mean']
 real = results_all['hr_mean_gt']
@@ -136,13 +138,13 @@ bias = np.mean(diffs)
 # Sample standard deviation
 s = np.std(diffs, ddof=1)  # Use ddof=1 to get the sample standard deviation
 
-print(f'For the differences, x̄ = {bias:.2f} m/s and s = {s:.2f} m/s')
+print(f'For the differences, x̄ = {bias:.2f} bpm and s = {s:.2f} bpm')
 
 # Limits of agreement (LOAs)
 upper_loa = bias + 1.96 * s
 lower_loa = bias - 1.96 * s
 
-print(f'The limits of agreement are {upper_loa:.2f} m/s and {lower_loa:.2f} m/s')
+print(f'The limits of agreement are {upper_loa:.2f} bpm and {lower_loa:.2f} bpm')
 
 
 # Confidence level
@@ -162,7 +164,7 @@ print(f'95% of normally distributed data lies within {z_star}σ of the mean')
 # Limits of agreement (LOAs)
 loas = (bias - z_star * s, bias + z_star * s)
 
-print(f'The limits of agreement are {loas} m/s')
+print(f'The limits of agreement are {loas} bpm')
 
 # Limits of agreement (LOAs)
 loas = st.norm.interval(C, bias, s)
@@ -181,8 +183,8 @@ ax.axhline(y=bias, c='grey', ls='--')
 ax.axhline(y=loas[0], c='grey', ls='--')
 # Labels
 ax.set_title('Bland-Altman Plot')
-ax.set_xlabel('Mean (m/s)')
-ax.set_ylabel('Difference (m/s)')
+ax.set_xlabel('Mean (bpm)')
+ax.set_ylabel('Difference (bpm)')
 # Get axis limits
 left, right = ax.get_xlim()
 bottom, top = ax.get_ylim()
