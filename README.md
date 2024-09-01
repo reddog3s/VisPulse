@@ -21,15 +21,15 @@ Different combinations of pose detectors and trackers were evaluated on [PoseTra
 | Detector and tracker | mAP | HOTA |
 | -------------------- | --- | ---- |
 | RTMO-l + ByteTrack   | 46.2 | 35.3 |
-| RTMPose-l + ByteTrack   | 46.2 | 37.9 |
-| RTMPose-m + ByteTrack   | 46.2 | 37.3 |
-| YOLOv8l-pose + ByteTrack   | 46.2 | 33.9 |
-| YOLOv8l-pose + BoT-SORT   | 46.2 | 36.9 |
-| YOLOv8m-pose + ByteTrack   | 46.2 | 34.4 |
-| YOLOv8m-pose + BoT-SORT  | 46.2 | 35.2 |
-| YOLOv8s-pose + ByteTrack   | 46.2 | 31.7 |
+| RTMPose-l + ByteTrack   | 47.2 | 37.9 |
+| RTMPose-m + ByteTrack   | 46.4 | 37.3 |
+| YOLOv8l-pose + ByteTrack   | 49.6 | 33.9 |
+| YOLOv8l-pose + BoT-SORT   | - | 36.9 |
+| YOLOv8m-pose + ByteTrack   | 47.4 | 34.4 |
+| YOLOv8m-pose + BoT-SORT  | - | 35.2 |
+| YOLOv8s-pose + ByteTrack   | 43.2 | 31.7 |
 
-Based on evaluation results for PoseTrack21, combination of **RTMPose-m + ByteTrack** was selected. HR estimation was evaluated on video sequences recorded for this project. On videos, one or two people are engaged in physical activities, standing 2m from camera. Apple Watch was used to gather ground truth HR data.
+Based on evaluation results for PoseTrack21, combination of **RTMPose-m + ByteTrack** was selected. Speed reported by authors was also taken in the consideration. HR estimation was evaluated on video sequences recorded for this project. On videos, one or two people are engaged in physical activities, standing 2m from camera. Apple Watch was used to gather ground truth HR data.
 
 Three different BVP (blood volume pulse) signal extraction methods were tested. The most simple method based on analysis of green channel turned out to be most accurate. 
 
